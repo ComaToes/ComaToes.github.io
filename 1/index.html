@@ -32,20 +32,25 @@ function preload() {
     game.load.tileset("tiles","tileset.png",32,32);
     game.load.tilemap("map", 'tilemap.json', null, Phaser.Tilemap.TILED_JSON);
 	game.load.audio("one","1.mp3");
+	game.load.audio("two","2.mp3");
 	game.load.image("img1", "1.png");
+	game.load.image("img2", "2.png");
 	game.load.image("u1", "u.png");
 
 }
 
 var tilelayer;
 
-var music;
+var music1;
+var music2;
 var emitter;
+var emitter2;
 var leftEmitter;
 var rightEmitter;
 
 var one = 0;
 var u1;
+var won = false;
 
 function create() {
 
@@ -66,7 +71,8 @@ function create() {
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
 
-    music = game.add.audio("one");
+    music1 = game.add.audio("one");
+    music2 = game.add.audio("two");
 
     emitter = game.add.emitter(0, 0, 200);
 
@@ -79,6 +85,10 @@ function create() {
     emitter.bounce.setTo(0.5, 0.5);
     emitter.particleDrag.x = 10;
     emitter.angularDrag = 30;
+
+    emitter2 = game.add.emitter(0, 0, 200);
+    emitter2.makeParticles('img2');
+    emitter2.gravity = 10;
 
     leftEmitter = game.add.emitter(0, 0);
     leftEmitter.bounce.setTo(0.5, 0.5);
@@ -93,28 +103,39 @@ function create() {
     rightEmitter.makeParticles('img1', 0, 250, 1, true);
 
     game.input.onDown.add( doOne, this );
-    game.input.onDown.add( particleBurst, this );
 
 }
 
 function doOne() {
-	music.play();
 	one++;
-	if( one >= 111 )
+	if( !won && one >= 111 ) {
 		youWon();
+		won = true;
+	}
+	if( Math.round( Math.random()*10 ) == 1 )
+		doTwo();
+	else {
+		music1.play();
+		particleBurst();
+	}
+}
+
+function doTwo() {
+
+	music2.play();
+
+    emitter2.x = game.input.x;
+    emitter2.y = game.input.y;
+
+    emitter2.start(true, 3000, null, 10);
 
 }
 
 function particleBurst() {
 
-    //  Position the emitter where the mouse/touch event was
     emitter.x = game.input.x;
     emitter.y = game.input.y;
 
-    //  The first parameter sets the effect to "explode" which means all particles are emitted at once
-    //  The second gives each particle a 2000ms lifespan
-    //  The third is ignored when using burst/explode mode
-    //  The final parameter (10) is how many particles will be emitted in this single burst
     emitter.start(true, 3000, null, 10);
 
 }
