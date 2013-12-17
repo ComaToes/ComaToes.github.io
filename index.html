@@ -1,0 +1,150 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>1</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+    <style type="text/css">
+
+        body {
+            margin: 0;
+            background: black;
+        }
+
+        #le-canvas {
+        	margin: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+<center>
+<div id="canvas1"></div>
+
+<script type="text/javascript">
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, 'canvas1', { preload: preload, create: create, update: update });
+
+function preload() {
+
+    game.load.tileset("tiles","tileset.png",32,32);
+    game.load.tilemap("map", 'tilemap.json', null, Phaser.Tilemap.TILED_JSON);
+	game.load.audio("one","1.mp3");
+	game.load.image("img1", "1.png");
+	game.load.image("u1", "u.png");
+
+}
+
+var tilelayer;
+
+var music;
+var emitter;
+var leftEmitter;
+var rightEmitter;
+
+var one = 0;
+var u1;
+
+function create() {
+
+    // Here we create the ground.
+
+    game.world.setBounds(0,0,800,600);
+
+    var tileset = game.add.tileset("tiles");
+    tileset.setCollision(0,true,true,true,true);
+
+    var map = game.add.tilemap("map");
+
+    tilelayer = game.add.tilemapLayer(0, 0, 800, 19*32, tileset, map, 0);
+    tilelayer.fixedToCamera = false;
+
+    u1 = game.add.sprite(0, -500, "u1");
+
+    //  Our controls.
+    cursors = game.input.keyboard.createCursorKeys();
+
+    music = game.add.audio("one");
+
+    emitter = game.add.emitter(0, 0, 200);
+
+    emitter.makeParticles('img1');
+    emitter.gravity = 10;
+
+    emitter.minParticleSpeed.setTo(-200, -300);
+    emitter.maxParticleSpeed.setTo(200, -400);
+    emitter.gravity = 8;
+    emitter.bounce.setTo(0.5, 0.5);
+    emitter.particleDrag.x = 10;
+    emitter.angularDrag = 30;
+
+    leftEmitter = game.add.emitter(0, 0);
+    leftEmitter.bounce.setTo(0.5, 0.5);
+    leftEmitter.setXSpeed(300, 500);
+    leftEmitter.setYSpeed(-50, 50);
+    leftEmitter.makeParticles('img1', 0, 250, 1, true);
+
+    rightEmitter = game.add.emitter(game.world.width, 0);
+    rightEmitter.bounce.setTo(0.5, 0.5);
+    rightEmitter.setXSpeed(-300, -500);
+    rightEmitter.setYSpeed(-50, 50);
+    rightEmitter.makeParticles('img1', 0, 250, 1, true);
+
+    game.input.onDown.add( doOne, this );
+    game.input.onDown.add( particleBurst, this );
+
+}
+
+function doOne() {
+	music.play();
+	one++;
+	if( one >= 111 )
+		youWon();
+
+}
+
+function particleBurst() {
+
+    //  Position the emitter where the mouse/touch event was
+    emitter.x = game.input.x;
+    emitter.y = game.input.y;
+
+    //  The first parameter sets the effect to "explode" which means all particles are emitted at once
+    //  The second gives each particle a 2000ms lifespan
+    //  The third is ignored when using burst/explode mode
+    //  The final parameter (10) is how many particles will be emitted in this single burst
+    emitter.start(true, 3000, null, 10);
+
+}
+
+function youWon() {
+
+	u1.reset( 130, 200 );
+    leftEmitter.start(false, 5000, 20);
+    rightEmitter.start(false, 5000, 20);
+
+}
+
+function update() {
+
+    //  Collide the player and the stars with the platforms
+    //game.physics.collide(player, tilelayer);
+
+    game.physics.collide(emitter, tilelayer);
+    game.physics.collide(emitter, emitter);
+
+    game.physics.collide(leftEmitter, rightEmitter);
+    game.physics.collide(leftEmitter, tilelayer);
+    game.physics.collide(rightEmitter, tilelayer);
+
+    game.physics.collide(emitter, leftEmitter);
+    game.physics.collide(emitter, rightEmitter);
+
+
+}
+</script>
+
+</body>
+</html>
