@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html ng-app="crit">
+
+<head>
+  <link data-require="bootstrap-css@3.0.2" data-semver="3.0.2" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" />
+  <link data-require="bootstrap@*" data-semver="3.0.2" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" />
+  <script data-require="jquery@2.0.3" data-semver="2.0.3" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+  <script data-require="bootstrap@*" data-semver="3.0.2" src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+  <script data-require="angular.js@1.2.1" data-semver="1.2.1" src="http://code.angularjs.org/1.2.1/angular.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <script src="/sto-tools/sto-tools-nav.js"></script>
+  <script src="script.js"></script>
+  <title>STO Magical Mystery Weapon Crit Advisor</title>
+</head>
+
+<body ng-controller="CritCtrl">
+
+  <div class="container">
+  
+    <div ng-include="'/sto-tools/sto-tools-nav.html'"></div>
+
+    <div class="row">
+      <div class="col-md-12" style="text-align: center; padding-bottom: 10px">
+        <h1 style="margin-bottom: 5px">STO Magical Mystery Weapon Crit Advisor</h1>
+        <small>by @Valill</small>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+  
+        
+        <div class="panel panel-primary">
+          <div class="panel-heading">Crit Modifiers from Items, Skills and Passives</div>
+          <div class="panel-body">
+            <p>
+              Select your active crit modifiers:
+            </p>
+            <ul>
+              <li ng-repeat="item in globalModifiers | nocustom">
+                <input type="checkbox" ng-model="item.active" ng-change="updateResults()" /> {{item.name}} (<span ng-show="item.accuracy > 0">+{{item.accuracy|number:0}}% accuracy</span><span ng-show="item.accuracy > 0 && item.chance+item.severity > 0">, </span><span ng-show="item.chance > 0">+{{item.chance|number:2}}% chance</span><span ng-show="item.chance+item.accuracy > 0 && item.severity > 0">, </span><span ng-show="item.severity > 0">+{{item.severity|number:1}}% severity</span>)
+              </li>
+            </ul>
+            
+            Weapon Specialisation Skill:
+            <input ng-model="weaponSpecSkill" type="number" min="0" max="9" ng-change="updateWeaponSpec(); updateResults()" />
+            (Energy or Projectile, depending on which you are checking)
+          </div>
+        </div>
+        
+        <div class="panel panel-primary">
+          <div class="panel-heading">Romulan Operative Bridge Officers</div>
+          <div class="panel-body">
+            <p>Specify the number of Romulan Operatives active on your ship</p>
+            <p>
+              Basic Romulan Operatives:
+              <input ng-model="numBasicRomOps" type="number" min="0" max="5" ng-change="updateRomulanOperatives(); updateResults()" />
+            </p>
+            <p>
+              Romulan Operatives:
+              <input ng-model="numRomOps" type="number" min="0" max="5" ng-change="updateRomulanOperatives(); updateResults()" />
+            </p>
+            <p>
+              Superior Romulan Operatives:
+              <input ng-model="numSuperiorRomOps" type="number" min="0" max="5" ng-change="updateRomulanOperatives(); updateResults()" />
+            </p>
+          </div>
+        </div>
+        
+        <div class="panel panel-primary">
+          <div class="panel-heading">Player Accuracy and Target Defense</div>
+          <div class="panel-body">
+            <p>Specify your 'Bonus Accuracy' (<b>in system space</b>: Ship Info > Attack) and your target's defense. Surplus accuracy provides bonus crit chance and severity.</p>
+            <p>
+              Bonus Accuracy:
+              <input ng-model="playerAccuracy" type="number" min="0" max="1000" ng-change="updateResults()" />
+            </p>
+            <p>
+              Target Defense:
+              <input ng-model="targetDefense" type="number" min="0" max="1000" ng-change="updateResults()" />
+            </p>
+            <p>
+              <small>
+                Accuracy calculations are performed according to the formulae <a href="http://blackwyvernarts.com/blog/?p=58">given here</a>. Since there is no information on how these were derived, it may be incorrect!<br/>
+              </small>
+            </p>
+          </div>
+        </div>
+    
+        <div class="panel panel-primary">
+          <div class="panel-heading">Weapon Modifier Preference and Tac Console Slots</div>
+          <div class="panel-body">
+            <p>Specify the number of weapon modifiers you are willing to allocate to [Acc], [CrtD] or [CrtH] and the number of tac console slots available on your ship</p>
+            <p>
+              Available Weapon Modifiers:
+              <input ng-model="numModifiers" type="number" min="0" max="3" ng-change="updateResults()" />
+            </p>
+            <p>
+              Tactical Console Slots:
+              <input ng-model="numTacConsoleSlots" type="number" min="0" max="5" ng-change="updateResults()" />
+            </p>
+          </div>
+        </div>
+    
+        <div class="panel panel-info">
+          <div class="panel-heading">Modify Game Constants [Optional]</div>
+          <div class="panel-body">
+            <p>
+              These settings let you see how things would change if the devs modified the stats of tac consoles.
+            </p>
+            <p>
+              Vulnerability Locator Crit Chance <input ng-model="tacConsoleChanceMod" type="number" min="0" max="3" ng-change="updateResults()" />
+            </p>
+            <p>
+              Vulnerability Exploiter Crit Severity <input ng-model="tacConsoleSeverityMod" type="number" min="0" max="100" ng-change="updateResults()" />
+            </p>
+          </div>
+        </div>
+        
+      </div>
+      <div class="col-md-8">
+    
+        <div class="panel panel-success">
+          <div class="panel-heading">Results</div>
+          <div class="panel-body">
+            <p>
+            Possible combinations of weapon modifiers and fleet tactical consoles, in order of effectiveness:
+            </p>
+            
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Weapon and Console Combination</th>
+                  <th>Hit Chance</th>
+                  <th>Crit Chance</th>
+                  <th>Crit Severity</th>
+                  <th>Damage Multiplier</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="item in results | orderBy:'value':true">
+                  <td>
+                    <span ng-hide="item.groups">-</span>
+                    <span ng-show="item.groups.weaponMod.accuracy > 0">[Acc]<span ng-show="item.groups.weaponMod.accuracy > weaponAccuracyMod">x{{item.groups.weaponMod.accuracy/weaponAccuracyMod | number:0}}</span>
+                    </span>
+                    <span ng-show="item.groups.weaponMod.severity > 0">[CrtD]<span ng-show="item.groups.weaponMod.severity > weaponSeverityMod">x{{item.groups.weaponMod.severity/weaponSeverityMod | number:0}}</span>
+                    </span>
+                    <span ng-show="item.groups.weaponMod.chance > 0">[CrtH]<span ng-show="item.groups.weaponMod.chance > weaponChanceMod">x{{item.groups.weaponMod.chance/weaponChanceMod | number:0}}</span>
+                    </span>
+                    <span ng-show="item.groups.tacConsole.severity > 0">[Exp]<span ng-show="item.groups.tacConsole.severity > tacConsoleSeverityMod">x{{item.groups.tacConsole.severity/tacConsoleSeverityMod | number:0}}</span>
+                    </span>
+                    <span ng-show="item.groups.tacConsole.chance > 0">[Loc]<span ng-show="item.groups.tacConsole.chance > tacConsoleChanceMod">x{{item.groups.tacConsole.chance/tacConsoleChanceMod | number:0}}</span>
+                    </span>
+                  </td>
+                  <td>
+                    {{item.hit*100 | number:0}}%
+                  </td>
+                  <td>
+                    {{item.chance | number:1}}%
+                  </td>
+                  <td>
+                    {{item.severity | number:0}}%
+                  </td>
+                  <td style="font-weight: bold">
+                    {{item.value | number:3}}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        
+        </div>
+        
+      </div>
+
+    </div>
+
+
+  </div>
+</body>
+
+</html>

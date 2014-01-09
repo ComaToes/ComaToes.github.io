@@ -1,0 +1,11 @@
+/* Styles go here */
+
+ul {
+  list-style: none;
+  padding: 0px 10px;
+}
+
+h1 {
+  text-align: center;
+  margin: 20px;
+}
