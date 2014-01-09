@@ -1,11 +1,11 @@
-var dpsLeague = angular.module( "dps-league", ["sto-tools"] );
+var dpsLeague = angular.module( "dps-league", [] );
 
 function DpsLeagueCtrl($scope, $http) {
-  
+
   $scope.dpsData = [];
-  
+
   $scope.refresh = function() {
-    
+
     $http.get("http://sto-dps-league.herokuapp.com/data")
     	.success( function(data) {
         var players = {};
@@ -18,11 +18,11 @@ function DpsLeagueCtrl($scope, $http) {
 			    return null;
 			  } );
 		  });
-    
+
   }
-  
+
   $scope.refresh();
-  
-  
-  
+
+
+
 }
