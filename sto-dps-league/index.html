@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html ng-app="dps-league">
+
+  <head>
+    <link data-require="bootstrap-css@3.x" data-semver="3.0.3" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" />
+    <script data-require="angular.js@*" data-semver="1.2.7" src="http://code.angularjs.org/1.2.7/angular.js"></script>
+    <script data-require="jquery@*" data-semver="2.0.3" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script data-require="ui-bootstrap@*" data-semver="0.9.0" src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.9.0.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js"></script>
+    
+    <title>STO DPS League</title>
+  </head>
+
+  <body ng-controller="DpsLeagueCtrl">
+  
+    <div class="container">
+    
+      <div class="row">
+        <div class="col-md-12" style="text-align: center; padding-bottom: 10px">
+          <h1 style="margin-bottom: 5px">STO DPS League</h1>
+          <small>Data from CombatLogReader by @omegashoker, Web display by @Valill</small>
+        </div>
+      </div>
+      
+      <div class="panel panel-success">
+        <div class="panel-heading">DPS Rankings</div>
+        <div class="panel-body">
+        
+          <input type="text" class="form-control input-sm" placeholder="Search for Player" ng-model="search.player"/>
+    
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>STF</th>
+                <th>Date</th>
+                <th>Player</th>
+                <th>DPS</th>
+                <th>Damage</th>
+                <th>Time in Combat</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="item in dpsData | filter:search:strict">
+                <td>{{item.rank}}</td>
+                <td>{{item.map}}</td>
+                <td>{{item.timestamp}}</td>
+                <td>{{item.player}}</td>
+                <td>{{item.damage / item.playerTime | number:0}}</td>
+                <td>{{item.damage | number:0}}</td>
+                <td>{{item.playerTime}} / {{item.totalTime}} ({{ (item.playerTime/item.totalTime*100) | number:0 }}%)</td>
+                <td><small>{{item.comment}}</small></td>
+              </tr>
+          </table>
+          
+        </div>
+      
+      </div>
+    
+    </div>
+  
+  </body>
+
+</html>
