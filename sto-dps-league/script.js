@@ -1,4 +1,4 @@
-var dpsLeague = angular.module( "dps-league", [] );
+var dpsLeague = angular.module( "dps-league", ["sto-tools"] );
 
 function DpsLeagueCtrl($scope, $http) {
   
