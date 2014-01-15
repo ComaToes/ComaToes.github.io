@@ -204,12 +204,19 @@ function CritCtrl($scope) {
         item.hit = 1;
       
       // Add crit chance/sev for accuracy overflow
-      if( item.hit > 1 ) {
+      /*if( item.hit > 1 ) {
         item.chance += (item.hit-1) * 12.5;
         item.severity += (item.hit-1) * 50;
         item.hit = 1;
+      }*/
+
+      if( acc > def ) {
+        var diff = acc-def;
+        item.chance += diff * 0.125;
+        item.severity += diff * 0.5;
+        item.hit = 1;
       }
-      
+
       // Final damage multiplier calculation
       item.value = item.hit * (1 + item.chance*item.severity/10000);
       
