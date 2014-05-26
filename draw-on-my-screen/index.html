@@ -60,10 +60,6 @@
 
   canvas.setBackgroundImage("screen.png", canvas.renderAll.bind(canvas));
 
-  /*canvas.setBackgroundImage("screen.png", canvas.renderAll.bind(canvas), {
-    opacity: 0.0
-  });*/
-
   canvas.freeDrawingBrush = new fabric['CircleBrush'](canvas);
 
   fabric.Object.prototype.transparentCorners = false;
@@ -83,7 +79,7 @@
 
 
 	canvas.setBackgroundImage("screen.png", function() {
-
+			canvas.renderAll();
 			var dataurl = canvas.toDataURL();
 			console.log( dataurl );
 			renderedImg.src = dataurl;
