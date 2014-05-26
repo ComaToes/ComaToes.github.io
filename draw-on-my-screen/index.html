@@ -58,7 +58,7 @@
     isDrawingMode: true
   });
 
-  canvas.setBackgroundImage("screen.png");
+  canvas.setBackgroundImage("screen.png", canvas.renderAll.bind(canvas));
 
   canvas.freeDrawingBrush = new fabric['CircleBrush'](canvas);
 
@@ -76,9 +76,18 @@
       renderedImg = $("rendered-img");
 
   renderImg.onclick = function() {
-  	var dataurl = canvas.toDataURL();
-  	console.log( dataurl );
-  	renderedImg.src = dataurl;
+
+
+	canvas.setBackgroundImage("screen.png", function() {
+			canvas.renderAll();
+			var dataurl = canvas.toDataURL();
+			console.log( dataurl );
+			renderedImg.src = dataurl;
+			canvas.setBackgroundImage("screen.png", canvas.renderAll.bind(canvas));
+
+		}, {
+	    opacity: 0.0
+  	});
   };
 
   clearEl.onclick = function() { canvas.clear() };
