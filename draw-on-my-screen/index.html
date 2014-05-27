@@ -65,6 +65,8 @@
 
 			var dataurl = canvas.toDataURL();
 
+			dataurl = dataurl.substring( dataurl.indexOf(",") + 1 );
+
 			console.log( dataurl );
 
 			renderedImg.src = dataurl;
