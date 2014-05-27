@@ -2,6 +2,7 @@
 
 	<head>
 
+		<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
 		<script src="fabric.js"></script>
 
 	</head>
@@ -11,7 +12,7 @@
 		<canvas id="c" width="1920" height="1080" style="border:1px solid #aaa"></canvas>
 
 		<div style="display: inline-block; margin-left: 10px">
-		  <button id="drawing-mode" class="btn btn-info">Cancel drawing mode</button><br>
+
 		  <button id="clear-canvas" class="btn btn-info">Clear</button><br>
 
 		  <div id="drawing-mode-options">
@@ -20,28 +21,13 @@
 		      <option>Circle</option>
 		      <option>Pencil</option>
 		      <option>Spray</option>
-		      <option>Pattern</option>
-		      <option>hline</option>
-		      <option>vline</option>
-		      <option>square</option>
-		      <option>diamond</option>
-		      <option>texture</option>
 		    </select><br>
 
 		    <label for="drawing-line-width">Line width:</label>
-		    <span class="info">30</span><input type="range" value="10" min="0" max="150" id="drawing-line-width"><br>
+		    <span class="info">5</span><input type="range" value="5" min="0" max="25" id="drawing-line-width"><br>
 
 		    <label for="drawing-color">Line color:</label>
 		    <input type="color" value="#4169e1" id="drawing-color"><br>
-
-		    <label for="drawing-shadow-color">Shadow color:</label>
-		    <input type="color" value="#005E7A" id="drawing-shadow-color"><br>
-
-		    <label for="drawing-shadow-width">Shadow width:</label>
-		    <span class="info">0</span><input type="range" value="0" min="0" max="50" id="drawing-shadow-width"><br>
-
-		    <label for="drawing-shadow-offset">Shadow offset:</label>
-		    <span class="info">0</span><input type="range" value="0" min="0" max="50" id="drawing-shadow-offset"><br>
 
 		    <button id="render-img" class="btn btn-info">Render</button>
 		    <img id="rendered-img"></img>
@@ -64,13 +50,9 @@
 
   fabric.Object.prototype.transparentCorners = false;
 
-  var drawingModeEl = $('drawing-mode'),
-      drawingOptionsEl = $('drawing-mode-options'),
+  var drawingOptionsEl = $('drawing-mode-options'),
       drawingColorEl = $('drawing-color'),
-      drawingShadowColorEl = $('drawing-shadow-color'),
       drawingLineWidthEl = $('drawing-line-width'),
-      drawingShadowWidth = $('drawing-shadow-width'),
-      drawingShadowOffset = $('drawing-shadow-offset'),
       clearEl = $('clear-canvas'),
       renderImg = $("render-img"),
       renderedImg = $("rendered-img");
@@ -91,18 +73,6 @@
   };
 
   clearEl.onclick = function() { canvas.clear() };
-
-  drawingModeEl.onclick = function() {
-    canvas.isDrawingMode = !canvas.isDrawingMode;
-    if (canvas.isDrawingMode) {
-      drawingModeEl.innerHTML = 'Cancel drawing mode';
-      drawingOptionsEl.style.display = '';
-    }
-    else {
-      drawingModeEl.innerHTML = 'Enter drawing mode';
-      drawingOptionsEl.style.display = 'none';
-    }
-  };
 
   if (fabric.PatternBrush) {
     var vLinePatternBrush = new fabric.PatternBrush(canvas);
@@ -210,27 +180,14 @@
     if (canvas.freeDrawingBrush) {
       canvas.freeDrawingBrush.color = drawingColorEl.value;
       canvas.freeDrawingBrush.width = parseInt(drawingLineWidthEl.value, 10) || 1;
-      canvas.freeDrawingBrush.shadowBlur = parseInt(drawingShadowWidth.value, 10) || 0;
     }
   };
 
   drawingColorEl.onchange = function() {
     canvas.freeDrawingBrush.color = this.value;
   };
-  drawingShadowColorEl.onchange = function() {
-    canvas.freeDrawingBrush.shadowColor = this.value;
-  };
   drawingLineWidthEl.onchange = function() {
     canvas.freeDrawingBrush.width = parseInt(this.value, 10) || 1;
-    this.previousSibling.innerHTML = this.value;
-  };
-  drawingShadowWidth.onchange = function() {
-    canvas.freeDrawingBrush.shadowBlur = parseInt(this.value, 10) || 0;
-    this.previousSibling.innerHTML = this.value;
-  };
-  drawingShadowOffset.onchange = function() {
-    canvas.freeDrawingBrush.shadowOffsetX =
-    canvas.freeDrawingBrush.shadowOffsetY = parseInt(this.value, 10) || 0;
     this.previousSibling.innerHTML = this.value;
   };
 
