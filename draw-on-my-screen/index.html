@@ -2,43 +2,14 @@
 
 	<head>
 
-		<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+		<script src="jquery-1.10.2.js"></script>
 		<script src="fabric.js"></script>
-
-	</head>
-
-	<body>
-
-		<canvas id="c" width="1920" height="1080" style="border:1px solid #aaa"></canvas>
-
-		<div style="display: inline-block; margin-left: 10px">
-
-		  <button id="clear-canvas" class="btn btn-info">Clear</button><br>
-
-		  <div id="drawing-mode-options">
-		    <label for="drawing-mode-selector">Mode:</label>
-		    <select id="drawing-mode-selector">
-		      <option>Circle</option>
-		      <option>Pencil</option>
-		      <option>Spray</option>
-		    </select><br>
-
-		    <label for="drawing-line-width">Line width:</label>
-		    <span class="info">5</span><input type="range" value="5" min="0" max="25" id="drawing-line-width"><br>
-
-		    <label for="drawing-color">Line color:</label>
-		    <input type="color" value="#4169e1" id="drawing-color"><br>
-
-		    <button id="render-img" class="btn btn-info">Render</button>
-		    <img id="rendered-img"></img>
-
-		  </div>
-		</div>
 
 	<script>
 
-(function() {
-  var $ = function(id){return document.getElementById(id)};
+$(function() {
+
+  var d = function(id){return document.getElementById(id)};
 
   var canvas = this.__canvas = new fabric.Canvas('c', {
     isDrawingMode: true
@@ -50,14 +21,14 @@
 
   fabric.Object.prototype.transparentCorners = false;
 
-  var drawingOptionsEl = $('drawing-mode-options'),
-      drawingColorEl = $('drawing-color'),
-      drawingLineWidthEl = $('drawing-line-width'),
-      clearEl = $('clear-canvas'),
-      renderImg = $("render-img"),
-      renderedImg = $("rendered-img");
+  var drawingOptionsEl = d('drawing-mode-options'),
+      drawingColorEl = d('drawing-color'),
+      drawingLineWidthEl = d('drawing-line-width'),
+      clearEl = d('clear-canvas');
 
-  renderImg.onclick = function() {
+  d("renderImg").onclick = function() { doUpload() };
+
+  function doUpload() {
 
 	canvas.setBackgroundImage("screen.png", function() {
 
@@ -69,23 +40,22 @@
 
 			console.log( dataurl );
 
-			renderedImg.src = dataurl;
-
 			canvas.setBackgroundImage("screen.png", canvas.renderAll.bind(canvas));
 
 			jQuery.post( "http://cryptic-meadow-4496.herokuapp.com/submit", {
 				data: dataurl,
-				creator: "Bob"
+				creator: $("#creator").val()
 			} );
 
 		}, {
 	    opacity: 0.0
   	});
-  };
+
+  }
 
   clearEl.onclick = function() { canvas.clear() };
 
-  $('drawing-mode-selector').onchange = function() {
+  d('drawing-mode-selector').onchange = function() {
 
     canvas.freeDrawingBrush = new fabric[this.value + 'Brush'](canvas);
 
@@ -108,9 +78,42 @@
     canvas.freeDrawingBrush.width = parseInt(drawingLineWidthEl.value, 10) || 1;
     canvas.freeDrawingBrush.shadowBlur = 0;
   }
-})();
+});
 
 	</script>
+
+	</head>
+
+	<body>
+
+		<canvas id="c" width="1920" height="1080" style="border:1px solid #aaa"></canvas>
+
+		<div style="display: inline-block; margin-left: 10px">
+
+		  <button id="clear-canvas" class="btn btn-info">Clear Image</button><br>
+
+		  <div id="drawing-mode-options">
+		    <label for="drawing-mode-selector">Mode:</label>
+		    <select id="drawing-mode-selector">
+		      <option>Circle</option>
+		      <option>Pencil</option>
+		      <option>Spray</option>
+		    </select><br>
+
+		    <label for="drawing-line-width">Line width:</label>
+		    <span class="info">5</span><input type="range" value="5" min="0" max="25" id="drawing-line-width"><br>
+
+		    <label for="drawing-color">Line color:</label>
+		    <input type="color" value="#4169e1" id="drawing-color"><br>
+
+			<p>Enter your name/handle (this will be displayed alongside your glorious artwork). Leave blank for anonymous.</p>
+			<label for="creator">Name</label>
+			<input type="text" name="creator" id="creator" class="text ui-widget-content ui-corner-all"/>
+
+		    <button id="renderImg" class="btn btn-info">Submit</button>
+
+		  </div>
+		</div>
 
 	</body>
 
