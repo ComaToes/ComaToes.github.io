@@ -241,9 +241,9 @@ module.factory( "cardRules", function($filter, $factions) {
 						ship: {
 							cost: function(upgrade, ship, fleet, cost) {
 								return 3;
-							}
-						},
-						factionPenalty: function() { return 0; }
+							},
+							factionPenalty: function() { return 0; }
+						}
 					}
 				},
 				{
@@ -253,9 +253,9 @@ module.factory( "cardRules", function($filter, $factions) {
 						ship: {
 							cost: function(upgrade, ship, fleet, cost) {
 								return 3;
-							}
-						},
-						factionPenalty: function() { return 0; }
+							},
+							factionPenalty: function() { return 0; }
+						}
 					}
 				}
 			]
