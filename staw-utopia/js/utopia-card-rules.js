@@ -115,7 +115,7 @@ module.factory( "cardRules", function($filter, $factions) {
 			// Can't join fleet with AV80279 in it
 			canJoinFleet: function(ship, ship2, fleet) {
 				var canJoin = true;
-				$.each( fleet, function(i, other) {
+				$.each( fleet.ships, function(i, other) {
 					if( other.name == "Assimilated Vessel 80279" ) {
 						canJoin = false;
 						return false;
@@ -137,7 +137,7 @@ module.factory( "cardRules", function($filter, $factions) {
 			// Can't join fleet with AV64758 in it
 			canJoinFleet: function(ship, ship2, fleet) {
 				var canJoin = true;
-				$.each( fleet, function(i, other) {
+				$.each( fleet.ships, function(i, other) {
 					if( other.name == "Assimilated Vessel 64758" ) {
 						canJoin = false;
 						return false;
@@ -201,6 +201,33 @@ module.factory( "cardRules", function($filter, $factions) {
 			]
 		},
 		
+		"ship:u_s_s_enterprise_d_71510b": {
+			// Restore class on card text
+			class: "Galaxy Class",
+			// TODO use this field to pick the correct maneuver card
+			maneuverClass: "Galaxy Class (MU)"
+		},
+		
+		"ship:mirror_universe_starship_71510b": {
+			// Restore class on card text
+			class: "Galaxy Class",
+			// TODO use this field to pick the correct maneuver card
+			maneuverClass: "Galaxy Class (MU)"
+		},
+		
+		"ship:assimilation_target_prime_71510b": {
+			// Restore class on card text
+			class: "Galaxy Class",
+			// TODO use this field to pick the correct maneuver card
+			maneuverClass: "Galaxy Class (MU)"
+		},
+		
+		"ship:mirror_universe_borg_starship_71510b": {
+			// Restore class on card text
+			class: "Galaxy Class",
+			// TODO use this field to pick the correct maneuver card
+			maneuverClass: "Galaxy Class (MU)"
+		},
 		
 		
 		
@@ -2057,8 +2084,36 @@ module.factory( "cardRules", function($filter, $factions) {
 		
 		
 		
-		// SQUADRONS
+		// SUPPLEMENTAL
 		
+		"captain:soval_71800": {
+			intercept: {
+				ship: {
+					factionPenalty: function(upgrade,ship,fleet,factionPenalty) {
+						if( upgrade.type != "captain" && upgrade.type != "admiral" )
+							return 0;
+						return factionPenalty;
+					}
+				}
+			}
+		},
+		
+		"crew:orion_tactical_officer_71800": {
+			canEquip: onePerShip("Orion Tactical Officer")
+		},
+		
+		"crew:andorian_helmsman_71800": {
+			canEquip: onePerShip("Andorian Helmsman")
+		},
+		
+		// Enhanced Hull Plating
+		"tech:enhanced_hull_plating_71800": {
+			canEquip: onePerShip("Enhanced Hull Plating"),
+			canEquipFaction: function(upgrade,ship,fleet) {
+				return $factions.hasFaction( ship, "mirror" ) && ship.hull <= 4;
+			}
+		},
+
 		
 		
 	};

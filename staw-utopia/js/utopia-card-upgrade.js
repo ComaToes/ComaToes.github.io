@@ -25,22 +25,6 @@ module.filter( "upgradeSlots", function() {
 	
 		return slots;
 		
-		/*
-		var slots = [];
-		
-		if( ship.captain ) {
-			if( ship.captain.upgradeSlots )
-				slots = slots.concat( ship.captain.upgradeSlots );
-		}
-		
-		$.each( ship.upgrades.concat(ship.upgradeSlots || []), function(i,slot) {
-			slots.push( slot );
-			if( slot.occupant && slot.occupant.upgradeSlots )
-				slots = slots.concat( slot.occupant.upgradeSlots );
-		} );
-		
-		return slots;
-		*/
 	}
 	
 } );
@@ -90,9 +74,10 @@ module.filter( "interceptors", function($filter) {
 		
 		interceptors = interceptors.concat( shipInterceptors(card,ship,"ship",field,upgradeSlot) );
 	
-		$.each( fleet || [], function(i, ship) {
-			interceptors = interceptors.concat( shipInterceptors(card,ship,"fleet",field) );
-		});
+		if( fleet )
+			$.each( fleet.ships || [], function(i, ship) {
+				interceptors = interceptors.concat( shipInterceptors(card,ship,"fleet",field) );
+			});
 		
 		return interceptors;
 		
