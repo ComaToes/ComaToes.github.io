@@ -33,6 +33,9 @@ module.directive( "fleetBuilder", function($filter) {
 					typeOption.search = $.inArray(typeName, types) >= 0;
 				});
 				
+				if( $scope.searchOptions.columns < 1 )
+					$scope.searchOptions.columns = 1;
+				
 			};
 
 			$scope.addFleetShip = function(fleet, ship) {
@@ -71,16 +74,17 @@ module.directive( "fleetBuilder", function($filter) {
 			// TODO replace references
 			$scope.getUpgradeSlots = $filter("upgradeSlots");
 			
-			$scope.isUpgradeCompatible = function(upgrade, upgradeSlot) {
-				return upgrade != upgradeSlot.occupant && $.inArray( upgrade.type, upgradeSlot.type ) >= 0;
+			$scope.isUpgradeCompatible = function(upgrade, upgradeSlot, ship, fleet) {
+				var types = valueOf(upgradeSlot,"type",ship,fleet);
+				return upgrade != upgradeSlot.occupant && $.inArray( upgrade.type, types ) >= 0;
 			};
 			
 			var valueOf = $filter("valueOf");
 			
-			$scope.setShipUpgrade = function(fleet, ship, upgradeSlot, upgrade) {
+			$scope.setUpgrade = function(fleet, ship, upgradeSlot, upgrade) {
 				
 				// Check slot type
-				if( !$scope.isUpgradeCompatible(upgrade, upgradeSlot) ) {
+				if( !$scope.isUpgradeCompatible(upgrade, upgradeSlot, ship, fleet) ) {
 					console.log("wrong slot type");
 					return false;
 				}
@@ -104,7 +108,7 @@ module.directive( "fleetBuilder", function($filter) {
 				}
 				
 				// Slot-specific restrictions
-				if( upgradeSlot.canEquip && !upgradeSlot.canEquip(upgrade) ) {
+				if( upgradeSlot.canEquip && !upgradeSlot.canEquip(upgrade,ship,fleet,upgradeSlot) ) {
 					console.log("upgrade rejected by slot");
 					return false;
 				}
@@ -132,10 +136,40 @@ module.directive( "fleetBuilder", function($filter) {
 				
 			};
 			
+			$scope.setShipResource = function(fleet,ship,resource) {
+				
+				if( !fleet.resource || resource.type != fleet.resource.slotType ) {
+					return false;
+				}
+				
+				// Check interceptors
+				var canEquip = valueOf(resource,"canEquip",ship,fleet);
+				if( !canEquip ) {
+					console.log("equip stopped by special card rule");
+					return false;
+				}
+
+				// Check uniqueness
+				var other = $scope.findOtherInFleet(resource, fleet);
+				
+				// Fail if other
+				if( other && other != upgrade && other != ship.resource ) {
+					console.log("upgrade uniquenes check failed");
+					return false;
+				}
+				
+				ship.resource = angular.copy(resource);
+				
+				return ship.resource;
+				
+			};
+			
 			$scope.setShipCaptain = function(fleet,ship,captain) {
 				
-				if( captain.type != "captain" )
+				if( captain.type != "captain" ) {
+					console.log("card is not a captain");
 					return false;
+				}
 				
 				// Check interceptors
 				var canEquip = valueOf(captain,"canEquipCaptain",ship,fleet);
@@ -244,6 +278,14 @@ module.directive( "fleetBuilder", function($filter) {
 					
 				} );
 				
+				if( fleet.resource )
+					$.each( fleet.resource.upgradeSlots || [], function(i, upgradeSlot) {
+						if( card == upgradeSlot.occupant || isUniqueClash(card, upgradeSlot.occupant) ) {
+							clash = upgradeSlot.occupant;
+							return false;
+						}
+					} );
+				
 				return clash;
 				
 			};
@@ -260,6 +302,18 @@ module.directive( "fleetBuilder", function($filter) {
 				if( card == fleet.resource )
 					delete fleet.resource;
 				
+				if( fleet.resource )
+					$.each( fleet.resource.upgradeSlots || [], function(j,slot) {
+						if( card == slot.occupant ) {
+							if( replaceWith && $scope.isUpgradeCompatible( replaceWith, slot ) )
+								slot.occupant = replaceWith;
+							else
+								delete slot.occupant;
+							found = true;
+							return false;
+						}
+					} );
+				
 				$.each( fleet.ships, function(i, ship) {
 					
 					if( card == ship ) {
@@ -267,6 +321,11 @@ module.directive( "fleetBuilder", function($filter) {
 							fleet.ships[i] = replaceWith;
 						else
 							fleet.ships.splice(i,1);
+						return false;
+					}
+					
+					if( card == ship.resource ) {
+						delete ship.resource;
 						return false;
 					}
 					
@@ -302,6 +361,9 @@ module.directive( "fleetBuilder", function($filter) {
 					return !found;
 				});
 				
+				// Trigger onRemove handlers
+				valueOf(card,"onRemove",{},fleet);
+				
 			};
 			
 			$scope.getTotalCost = function(ship, fleet) {
@@ -309,6 +371,10 @@ module.directive( "fleetBuilder", function($filter) {
 				var valueOf = $filter("valueOf");
 				
 				var cost = ship.cost;
+				
+				if( ship.resource ) {
+					cost += valueOf(ship.resource,"cost",ship,fleet);
+				}
 				
 				if( ship.captain )
 					cost += valueOf(ship.captain,"cost",ship,fleet);
@@ -337,8 +403,12 @@ module.directive( "fleetBuilder", function($filter) {
 			};
 			
 			$scope.setFleetResource = function(fleet, resource) {
-				// TODO Might need to trigger some things when switching resource
+				
+				if( fleet.resource )
+					$scope.removeFromFleet(fleet.resource, fleet);
+				
 				fleet.resource = resource;
+				
 			};
 			
 			// TODO Move save/load to new module
@@ -350,7 +420,7 @@ module.directive( "fleetBuilder", function($filter) {
 				
 				// TODO Might need to save more data for some resources
 				if( fleet.resource )
-					savedFleet.resource = { id: fleet.resource.type+":"+fleet.resource.id };
+					savedFleet.resource = saveCard(fleet.resource);
 				
 				$.each( fleet.ships, function(i, ship) {
 					savedFleet.ships.push( saveCard(ship) );
@@ -368,6 +438,9 @@ module.directive( "fleetBuilder", function($filter) {
 				var saved = {
 					id: card.type+":"+card.id
 				};
+
+				if( card.resource )
+					saved.resource = saveCard(card.resource);
 				
 				if( card.captain )
 					saved.captain = saveCard(card.captain);
@@ -419,10 +492,22 @@ module.directive( "fleetBuilder", function($filter) {
 				
 				var card = angular.copy( $scope.findCardById(cards, savedCard.id) );
 				
-				if( !card )
+				if( !card ) {
+					console.log("unable to load card",savedCard.id);
 					return false;
+				}
 				
 				var promulgate = function(card) {
+					
+					if( savedCard.resource ) {
+						var result = loadCard(fleet, cards, savedCard.resource, card);
+						if( !result )
+							return false;
+						var resource = $scope.setShipResource( fleet, card, result.card );
+						if( !resource )
+							return false;
+						result.promulgate(resource);
+					}
 				
 					if( savedCard.captain ) {
 						var result = loadCard(fleet, cards, savedCard.captain, card);
@@ -450,7 +535,7 @@ module.directive( "fleetBuilder", function($filter) {
 							var result = loadCard( fleet, cards, savedUpgrade, card );
 							if( !result )
 								throw false;
-							var upgrade = $scope.setShipUpgrade( fleet, card, card.upgrades[i], result.card );
+							var upgrade = $scope.setUpgrade( fleet, card, card.upgrades[i], result.card );
 							if( !upgrade )
 								throw false;
 							result.promulgate(upgrade);
@@ -459,12 +544,12 @@ module.directive( "fleetBuilder", function($filter) {
 					} );
 					
 					$.each( savedCard.upgradeSlots || [], function(i, savedUpgrade) {
-						
+
 						if( savedUpgrade && savedUpgrade.id ) {
 							var result = loadCard( fleet, cards, savedUpgrade, ship || card );
 							if( !result )
 								throw false;
-							var upgrade = $scope.setShipUpgrade( fleet, ship || card, card.upgradeSlots[i], result.card );
+							var upgrade = $scope.setUpgrade( fleet, ship || card, card.upgradeSlots[i], result.card );
 							if( !upgrade )
 								throw false;
 							result.promulgate(upgrade);
@@ -484,8 +569,10 @@ module.directive( "fleetBuilder", function($filter) {
 				
 				if( savedFleet.resource ) {
 					result = loadCard( fleet, cards, savedFleet.resource );
-					if( result )
+					if( result ) {
 						fleet.resource = result.card;
+						result.promulgate(fleet.resource);
+					}
 				}
 				
 				$.each( savedFleet.ships, function(i, savedShip) {
@@ -517,14 +604,19 @@ module.directive( "fleetBuilder", function($filter) {
 					hashFleet = $scope.loadFleet( $scope.cards, hashFleet );
 					if( hashFleet ) {
 						
-						// Hide empty slots when loading a fleet.. so it looks nice.
-						$.each( hashFleet.ships, function(i,ship) {
-							ship.hideEmptySlots = true;
-						} );
-						
 						$scope.fleet = hashFleet;
 						
-						$scope.searchOptions.columns = 0;
+						if( $scope.fleet.ships.length > 0 ) {
+						
+							// Hide empty slots when loading a fleet.. so it looks nice.
+							$.each( hashFleet.ships, function(i,ship) {
+								ship.hideEmptySlots = true;
+							} );
+
+							// Also hide search
+							$scope.searchOptions.columns = 0;
+							
+						}
 						
 					}
 				}

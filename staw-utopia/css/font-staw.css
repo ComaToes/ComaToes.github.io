@@ -159,3 +159,19 @@
 .fs-resource:before {
   content: "A";
 }
+
+.fs-fleet-captain:before {
+  content: "A";
+}
+
+.fs-faction:before {
+  content: "A";
+}
+
+.fs-officer:before {
+  content: "A";
+}
+
+.fs-flagship:before {
+  content: "A";
+}
