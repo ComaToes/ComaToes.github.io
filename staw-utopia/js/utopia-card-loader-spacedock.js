@@ -35,7 +35,7 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 
 	return {
 
-		loadCards: function( loadShip, loadCaptain, loadAdmiral, loadUpgrade, loadResource, loadOther, callback ) {
+		loadCards: function( loadSet, loadShip, loadCaptain, loadAdmiral, loadUpgrade, loadResource, loadOther, callback ) {
 
 			// Load from Space Dock data file
 			$http.get( "data/data.xml" ).success( function(data) {
@@ -184,6 +184,7 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 						type: data.find("Type").text().toLowerCase(),
 						id: data.find("Id").text(),
 						name: filterName( data.find("Title").text() ),
+						set: data.find("Set").text(),
 						unique: (data.find("Unique").text() == "Y") || (data.find("MirrorUniverseUnique").text() == "Y"),
 						text: convertIconTags( data.find("Ability").text() ),
 						factions: [data.find("Faction").text().toLowerCase()],
@@ -335,8 +336,8 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var flagship = {
 						type: "flagship",
 						id: data.find("Id").text(),
-						name: "Flagship",
-						class: data.find("Title").text(),
+						class: "Flagship",
+						name: data.find("Title").text(),
 						text: convertIconTags( data.find("Ability").text() ),
 						cost: 10,
 						factions: [data.find("Faction").text().toLowerCase()],
@@ -413,6 +414,20 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					}
 
 					loadOther( flagship );
+
+				} );
+				
+				doc.find("Sets").find("Set").each( function(i, data) {
+
+					data = $(data);
+
+					var set = {
+						type: "set",
+						id: data.attr("id"),
+						name: data.text(),
+					};
+
+					loadSet( set );
 
 				} );
 				

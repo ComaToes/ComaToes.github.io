@@ -2,11 +2,9 @@ var module = angular.module("utopia-card-loader", ["utopia-card-rules", "utopia-
 
 module.factory( "cardLoader", function($http, $filter, cardRules, $factions, cardLoaderSpacedock, cardLoaderSupplemental) {
 
-
-
 	var valueOf = $filter("valueOf");
 
-	return function(cards, callback) {
+	return function(cards, sets, callback) {
 
 		function isDuplicate(card, cards) {
 			var dupe = false;
@@ -211,11 +209,19 @@ module.factory( "cardLoader", function($http, $filter, cardRules, $factions, car
 			cards.push(card);
 			
 		}
+		
+		function loadSet(set) {
+			
+			if( sets[set.id] )
+				console.log("Duplicate set",set.id,set.name);
+			
+			sets[set.id] = set;
+			
+		}
 
+		cardLoaderSpacedock.loadCards( loadSet, loadShip, loadCaptain, loadAdmiral, loadUpgrade, loadResource, loadOther, function() {
 
-		cardLoaderSpacedock.loadCards( loadShip, loadCaptain, loadAdmiral, loadUpgrade, loadResource, loadOther, function() {
-
-			cardLoaderSupplemental.loadCards( loadShip, loadCaptain, loadAdmiral, loadUpgrade, loadResource, loadOther );
+			cardLoaderSupplemental.loadCards( loadSet, loadShip, loadCaptain, loadAdmiral, loadUpgrade, loadResource, loadOther );
 
 			if( callback )
 				callback();
