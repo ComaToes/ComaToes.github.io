@@ -36,6 +36,8 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 	return {
 
 		loadCards: function( loadSet, loadShip, loadCaptain, loadAdmiral, loadUpgrade, loadResource, loadOther, callback ) {
+			
+			var ignoreCards = [ "jean_luc_picard_71531", "jean_luc_picard_c_71531", "jean_luc_picard_d_71531", "chakotay_b_71528", "calvin_hudson_b_71528", "calvin_hudson_c_71528", "sakharov_c_71997p" ];
 
 			// Load from Space Dock data file
 			$http.get( "data/data.xml" ).success( function(data) {
@@ -49,6 +51,7 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var ship = {
 						type: "ship",
 						id: data.find("Id").text(),
+						set: data.find("Set").text().split(","),
 						name: data.find("Title").text(),
 						class: data.find("ShipClass").text(),
 						actions: [],
@@ -115,6 +118,7 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var captain = {
 						type: "captain",
 						id: data.find("Id").text(),
+						set: data.find("Set").text().split(","),
 						name: data.find("Title").text(),
 						unique: (data.find("Unique").text() == "Y") || (data.find("MirrorUniverseUnique").text() == "Y"),
 						text: convertIconTags( data.find("Ability").text() ),
@@ -122,7 +126,6 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 						cost: Number( data.find("Cost").text() ),
 						skill: Number( data.find("Skill").text() ),
 						talents: Number( data.find("Talent").text() ),
-						set: data.find("Set").text()
 					};
 
 					var additionalFaction = data.find("AdditionalFaction").text().toLowerCase();
@@ -135,13 +138,10 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 							captain.mirror = true;
 					}
 
-					// Filter out duplicates (xml has a dupe captains for each slot type they could add - Picard 8, Chak 5, Cal Hudson)
-					var ignore = [ "jean_luc_picard_71531", "jean_luc_picard_c_71531", "jean_luc_picard_d_71531", "chakotay_b_71528", "calvin_hudson_b_71528", "calvin_hudson_c_71528" ];
-					if( $.inArray( captain.id, ignore ) >= 0 )
-						captain = false;
+					if( $.inArray( captain.id, ignoreCards ) >= 0 )
+						return;
 
-					if( captain )
-						loadCaptain(captain);
+					loadCaptain(captain);
 
 				});
 
@@ -152,6 +152,7 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var admiral = {
 						type: "admiral",
 						id: data.find("Id").text(),
+						set: data.find("Set").text().split(","),
 						name: data.find("Title").text(),
 						unique: (data.find("Unique").text() == "Y") || (data.find("MirrorUniverseUnique").text() == "Y"),
 						text: convertIconTags( data.find("Ability").text() ),
@@ -159,7 +160,6 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 						cost: Number( data.find("AdmiralCost").text() ),
 						skill: Number( data.find("SkillModifier").text() ),
 						talents: Number( data.find("AdmiralTalent").text() ),
-						set: data.find("Set").text()
 					}
 
 					var additionalFaction = data.find("AdditionalFaction").text().toLowerCase();
@@ -171,6 +171,9 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 						if( admiral.factions[i] == "mirror-universe" )
 							admiral.mirror = true;
 					}
+					
+					if( $.inArray( admiral.id, ignoreCards ) >= 0 )
+						return;
 
 					loadAdmiral(admiral);
 
@@ -183,8 +186,8 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var upgrade = {
 						type: data.find("Type").text().toLowerCase(),
 						id: data.find("Id").text(),
+						set: data.find("Set").text().split(","),
 						name: filterName( data.find("Title").text() ),
-						set: data.find("Set").text(),
 						unique: (data.find("Unique").text() == "Y") || (data.find("MirrorUniverseUnique").text() == "Y"),
 						text: convertIconTags( data.find("Ability").text() ),
 						factions: [data.find("Faction").text().toLowerCase()],
@@ -220,6 +223,9 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 								return;
 					}
 
+					if( $.inArray( upgrade.id, ignoreCards ) >= 0 )
+						return;
+				
 					loadUpgrade(upgrade);
 
 				});
@@ -232,12 +238,16 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var resource = {
 						type: "resource",
 						id: data.find("Id").text(),
+						set: data.find("Set").text().split(","),
 						name: data.find("Title").text(),
 						text: convertIconTags( data.find("Ability").text() ),
 						cost: Number( data.find("Cost").text() ),
 						showShipResourceSlot: function() {return false;},
 					};
 
+					if( $.inArray( resource.id, ignoreCards ) >= 0 )
+						return;
+				
 					loadResource( resource );
 
 				} );
@@ -250,6 +260,7 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var fleetCaptain = {
 						type: "fleet-captain",
 						id: data.find("Id").text(),
+						set: data.find("Set").text().split(","),
 						name: data.find("Title").text(),
 						factions: [data.find("Faction").text().toLowerCase()],
 						skill: Number( data.find("CaptainSkillBonus").text() ),
@@ -310,6 +321,7 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var officer = {
 						type: "officer",
 						id: data.find("Id").text(),
+						set: data.find("Set").text().split(","),
 						name: data.find("Title").text(),
 						text: convertIconTags( data.find("Ability").text() ),
 						cost: Number( data.find("Cost").text() ),
@@ -336,6 +348,7 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 					var flagship = {
 						type: "flagship",
 						id: data.find("Id").text(),
+						set: data.find("Set").text().split(","),
 						class: "Flagship",
 						name: data.find("Title").text(),
 						text: convertIconTags( data.find("Ability").text() ),
@@ -425,6 +438,8 @@ module.factory( "cardLoaderSpacedock", function($http, $filter, cardRules, $fact
 						type: "set",
 						id: data.attr("id"),
 						name: data.text(),
+						releaseDate: data.attr("releaseDate"),
+						parentSet: data.attr("overallSetName"),
 					};
 
 					loadSet( set );

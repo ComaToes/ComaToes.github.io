@@ -1,9 +1,11 @@
 var module = angular.module("utopia", ["ngSanitize", "utopia-card-ship", "utopia-card-upgrade", "utopia-card-resource", "utopia-dragdrop", "utopia-fleet-builder", "utopia-fleet-export", "utopia-card-loader", "utopia-card-rules"]);
 
-module.filter( "cardFilter", function($factions) {
+module.filter( "cardFilter", function($factions, $filter) {
 
 	return function( cards, options ) {
 
+		var valueOf = $filter("valueOf");
+	
 		return $.map( cards, function(card) {
 
 			// Uniqueness options
@@ -12,6 +14,31 @@ module.filter( "cardFilter", function($factions) {
 
 			if( options.generic && card.unique && !options.unique)
 				return null;
+			
+			// Filter by selected expansions
+			if( card.set && !options.ignoreSetsFilter ) {
+				var setSelected = false;
+				$.each( card.set, function(i,id) {
+					if( options.sets[id].search )
+						setSelected = true;
+				});
+				if( !setSelected )
+					return null;
+			}
+			
+			// Custom filter
+			if( options.filterField && options.filterOperator && options.filterValue ) {
+				var value = valueOf(card,options.filterField);
+				if( !value )
+					return null;
+				switch( options.filterOperator ) {
+					case "<": if( value >= options.filterValue ) return null; break;
+					case "<=": if( value > options.filterValue ) return null; break;
+					case "=": if( value != options.filterValue ) return null; break;
+					case ">=": if( value < options.filterValue ) return null; break;
+					case ">": if( value <= options.filterValue ) return null; break;
+				}
+			}
 
 			// Text search
 			if( options.query ) {
@@ -128,8 +155,23 @@ module.controller( "UtopiaCtrl", function($scope, $http, $filter, cardLoader, $f
 		generic: false,
 		factions: {},
 		types: { "ship": {}, "captain": {}, "admiral": {} },
-		columns: 1
+		columns: 1,
+		sortBy: "name",
+		ascending: "true",
+		filterField: "",
+		filterOperator: "<",
+		filterValue: "",
 	};
+	
+	try {
+		$scope.defaults = localStorage.defaults ? angular.fromJson( localStorage.defaults ) : false;
+		if( $scope.defaults )
+			angular.copy( $scope.defaults.search, $scope.search );
+	} catch(e) {}
+	
+	console.log($scope.search.sortBy);
+	
+	$scope.defaults = $scope.defaults || { search: angular.copy($scope.search) };
 	
 	$scope.resetSearch = function() {
 		$scope.search.query = "";
@@ -141,6 +183,11 @@ module.controller( "UtopiaCtrl", function($scope, $http, $filter, cardLoader, $f
 		$.each( $scope.search.types, function(i,types) {
 			types.search = false;
 		} );
+		$scope.search.sortBy = $scope.defaults.search.sortBy || "name";
+		$scope.search.ascending = $scope.defaults.search.ascending || "true";
+		$scope.search.filterField = "";
+		$scope.search.filterOperator = "<";
+		$scope.search.filterValue = "";
 	};
 	
 	$scope.modifySearchColumns = function(amount) {
@@ -163,6 +210,7 @@ module.controller( "UtopiaCtrl", function($scope, $http, $filter, cardLoader, $f
 
 	$scope.cards = [];
 	$scope.sets = {};
+	$scope.setList = [];
 	$scope.activeFleet = { ships: [] };
 
 	$scope.loading = true;
@@ -173,16 +221,84 @@ module.controller( "UtopiaCtrl", function($scope, $http, $filter, cardLoader, $f
 			if( !$scope.search.types[card.type] )
 				$scope.search.types[card.type] = {};
 		});
+		
+		try {
+			$scope.search.sets = localStorage.sets ? angular.fromJson( localStorage.sets ) : {};
+		} catch(e) {
+			$scope.search.sets = {};
+		}
+		$.each( $scope.sets, function(i, set) {
+			if( !$scope.search.sets[set.id] ) {
+				console.log("New set: " + set.name);
+				$scope.search.sets[set.id] = { search: true };
+			}
+			$scope.setList.push( set );
+		});
 	
 		$scope.$broadcast("cardsLoaded");
 		$scope.loading = false;
 		
 	});
 	
+	// Store changes to expansions filter
+	$scope.$watch( "search.sets", function(sets) {
+		if( sets )
+			localStorage.sets = angular.toJson( sets );
+	}, true);
+	
+	// Store changes to defaults
+	$scope.$watch( "defaults", function(defaults) {
+		if( defaults )
+			localStorage.defaults = angular.toJson( defaults );
+	}, true);
+	
 	// Construct faction list from hard-coded list in initiative order
 	$.each( $factions.list, function(i, faction) {
 		$scope.search.factions[faction.toLowerCase().replace(/ /g,"-")] = {};
 	});
+	
+	$scope.sortables = [
+		{
+			value: "name",
+			name: "Name"
+		},
+		{
+			value: "cost",
+			name: "Cost"
+		},
+		{
+			value: "attack",
+			name: "Attack"
+		},
+		{
+			value: "agility",
+			name: "Agility"
+		},
+		{
+			value: "hull",
+			name: "Hull"
+		},
+		{
+			value: "shields",
+			name: "Shields"
+		},
+		{
+			value: "skill",
+			name: "Skill Value"
+		}
+	];
+	
+});
+
+module.filter( "sortBy", function($filter) {
+	
+	return function( cards, sortBy, ascending ) {
+		ascending = ascending === true || ascending == "true";
+		return $filter("orderBy")( cards, function(card) { 
+			var value = $filter("valueOf")(card,sortBy); 
+			return value || 0;
+		}, !ascending );
+	};
 	
 });
 
@@ -207,3 +323,24 @@ module.filter( "group", function() {
 	};
 
 });
+
+module.directive( "searchFilterGroup", function() {
+	
+	return  {
+		
+		scope: {
+			title: "@",
+		},
+		
+		templateUrl: "search-filter-group.html",
+		
+		transclude: true,
+		
+		link: function(scope,element,attrs) {
+			if( attrs.open != undefined )
+				scope.showContent = true;
+		},
+		
+	};
+	
+} );
