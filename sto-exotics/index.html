@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html ng-app="sto-exotics" ng-controller="StoExoticsCtrl">
+    <head>
+		<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
+		<link rel="stylesheet" type="text/css" href="css/sto-exotics.min.css">
+		
+		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Play%7CTeko">
+		
+        <title>STO Exotic Damage Calculator</title>
+
+        <script type="text/javascript" src="js/lib/angular.min.js"></script>
+		<script type="text/javascript" src="js/lib/angular-sanitize.min.js"></script>
+        <script type="text/javascript" src="js/sto-exotics.min.js"></script>
+
+    </head>
+    <body>
+
+		<div class="container-fluid">
+
+			<div class="sto-exotics-header">
+				STO Exotic Damage Calculator
+			</div>
+			<p class="section-text">Created by <img class="logo-sto" src="img/sto.png">@Valill <img class="logo-reddit" src="img/reddit.png">/u/xeri-star</p>
+
+			<div class="row">
+			
+				<div class="col-md-3">
+				
+					<div class="section-header">
+						Ability Selection
+					</div>
+					
+					<p class="section-text">Select an ability and enter your in-game stats.</p>
+				
+					<div class="form-group">
+						<label for="ability">Bridge Officer Ability</label>
+						<select id="ability" class="form-control" ng-model="current.ability" ng-options="ability as ability.name for ability in data.abilities"></select>
+					</div>
+
+					<div class="form-group">
+						<label for="rank">Ability Rank</label>
+						<select id="rank" class="form-control" ng-model="current.modifiers[1]" ng-options="rank as rank.name for rank in data.modifiers | filter:{category:'rank'}"></select>
+					</div>
+
+					<div class="form-horizontal">
+						<div class="form-group">
+							<label for="level" class="col-md-6 control-label">Character Level</label>
+							<div class="col-md-5">
+								<input id="level" class="form-control" ng-model="current.level" type="number" min="1" max="60"/>
+							</div>
+						</div>
+					</div>
+					
+					<div class="form-horizontal">
+						<div class="form-group">
+							<label for="aux" class="col-md-6 control-label">Auxiliary Power Level</label>
+							<div class="col-md-5">
+								<input id="aux" class="form-control" ng-model="current.aux" type="number" min="0" step="0.01"/>
+							</div>
+						</div>
+					</div>
+					
+					<div class="form-horizontal">
+						<div class="form-group">
+							<label for="epg" class="col-md-6 control-label">EPG Skill Value</label>
+							<div class="col-md-5">
+								<input id="epg" class="form-control" ng-model="current.epg" type="number" min="0" step="0.01"/>
+							</div>
+						</div>
+					</div>
+					
+					<div class="section-footer"></div>
+				
+					<div class="section-header">
+						Available Bonuses
+					</div>
+					
+					<p class="section-text">Add the applicable bonuses for your build.</p>
+			
+					<div class="form-group">
+						<label for="search" ng-show="false">Search</label>
+						<input id="search" class="form-control" ng-model="search" type="text" placeholder="Search"/>
+					</div>
+				
+					<div ng-repeat="mod in data.modifiers | unique:current | filter:{name:search} | orderBy:'name'" ng-if="!mod.hidden">
+						<card current="current" item="mod" add="addModifier"></card>
+					</div>
+				
+				</div>
+				
+				<div class="col-md-9">
+			
+					<div class="section-header">
+						Tooltip Damage
+					</div>
+					
+					<p class="section-text">This should be a close match to the in-game tooltip damage.</p>
+					
+					<div class="row">
+						<div class="col-md-6 col-md-offset-3">
+							<div class="row">
+								<div class="col-md-8 col-md-offset-2">
+									<card current="current" item="current.ability">
+										{{calculateDamage()|round:(current.ability.damagePrecision|valueOf:current)}} {{current.ability.damageType|valueOf:current}} Damage
+									</card>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="section-footer"></div>
+			
+					<div class="section-header">
+						Damage Calculation
+					</div>
+					
+					<p class="section-text">Bonuses within each group are added together, then the group totals are multiplied together.</p>
+					
+					<div class="row">
+					
+						<div class="col-md-4 col-cat" ng-repeat="cat in data.categories">
+							<div class="category-container" ng-show="(current.modifiers | filter:isCat(cat.id)).length > 0">
+								<div class="category-name">{{cat.name}}</div><!-- ( {{categorySum(cat)}} )-->
+								<ul class="catlist">
+									<li ng-repeat="mod in current.modifiers | filter:isCat(cat.id) track by $index">
+										<card ng-if="!mod.hidden" current="current" item="mod" remove="removeMod"></card>
+										<card ng-if="mod.hidden" current="current" item="mod" ></card>
+									</li>
+								</ul>
+							</div>
+						</div>
+					
+					</div>
+					
+				</div>
+			
+			</div>
+			
+		</div>
+		
+		<script src="js/analytics.js"></script>
+		
+    </body>
+</html>
