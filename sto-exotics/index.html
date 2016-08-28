@@ -102,7 +102,7 @@
 							<div class="row">
 								<div class="col-md-8 col-md-offset-2">
 									<card current="current" item="current.ability">
-										{{calculateDamage()|round:(current.ability.damagePrecision|valueOf:current)}} {{current.ability.damageType|valueOf:current}} Damage
+										{{calculateDamage(current)|round:(current.ability.damagePrecision|valueOf:current)}} {{current.ability.damageType|valueOf:current}} Damage
 									</card>
 								</div>
 							</div>
