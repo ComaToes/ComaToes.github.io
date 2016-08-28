@@ -121,7 +121,7 @@
 					
 						<div class="col-md-4 col-cat" ng-repeat="cat in data.categories">
 							<div class="category-container" ng-show="(current.modifiers | filter:isCat(cat.id)).length > 0">
-								<div class="category-name">{{cat.name}}</div><!-- ( {{categorySum(cat)}} )-->
+								<div class="category-name">{{cat.name}}</div>
 								<ul class="catlist">
 									<li ng-repeat="mod in current.modifiers | filter:isCat(cat.id) track by $index">
 										<card ng-if="!mod.hidden" current="current" item="mod" remove="removeMod"></card>
