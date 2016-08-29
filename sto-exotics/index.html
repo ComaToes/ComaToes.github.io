@@ -35,12 +35,12 @@
 				
 					<div class="form-group">
 						<label for="ability">Bridge Officer Ability</label>
-						<select id="ability" class="form-control" ng-model="current.ability" ng-options="ability as ability.name for ability in data.abilities"></select>
+						<select id="ability" class="form-control" ng-model="current.ability" ng-options="ability as ability.career + ' - ' + ability.name for ability in data.abilities"></select>
 					</div>
 
 					<div class="form-group">
 						<label for="rank">Ability Rank</label>
-						<select id="rank" class="form-control" ng-model="current.modifiers[1]" ng-options="rank as rank.name for rank in data.modifiers | filter:{category:'rank'}"></select>
+						<select id="rank" class="form-control" ng-model="current.modifiers[1]" ng-options="rank as rank.name for rank in data.modifiers | filter:{id:'rank'}"></select>
 					</div>
 
 					<div class="form-horizontal">
@@ -84,7 +84,7 @@
 					</div>
 				
 					<div ng-repeat="mod in data.modifiers | unique:current | filter:{name:search} | orderBy:'name'" ng-if="!mod.hidden">
-						<card current="current" item="mod" add="addModifier"></card>
+						<card current="current" item="mod" add="addModifier" show-category></card>
 					</div>
 				
 				</div>
@@ -102,7 +102,10 @@
 							<div class="row">
 								<div class="col-md-8 col-md-offset-2">
 									<card current="current" item="current.ability">
-										{{calculateDamage(current)|round:(current.ability.damagePrecision|valueOf:current)}} {{current.ability.damageType|valueOf:current}} Damage
+										{{calculateDamage(current)|round:(current.ability.damagePrecision|valueOf:current)}}<span ng-if="current.ability.damageRangeMultiplier"> - {{calculateDamage(current)*current.ability.damageRangeMultiplier|round:(current.ability.damagePrecision|valueOf:current)}}</span> {{current.ability.damageType|valueOf:current}} Damage
+										<span ng-if="current.ability.secondaryDamage">to Primary Target
+											<p>{{calculateDamage(current)*current.ability.secondaryDamage|round:(current.ability.damagePrecision|valueOf:current)}} {{current.ability.damageType|valueOf:current}} Damage to Secondary Target(s)</p>
+										</span>
 									</card>
 								</div>
 							</div>
